@@ -31,3 +31,16 @@
     transform: rotate(360deg);
   }
 }
+
+.App {
+  font-family: sans-serif;
+  text-align: center;
+}
+
+ul {
+  list-style: none;
+}
+
+li {
+  margin-top: 0.5em;
+}

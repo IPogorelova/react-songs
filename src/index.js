@@ -1,66 +1,42 @@
 import * as React from "react";
-import { render } from "react-dom";
+import {render} from "react-dom";
+import debounce from 'lodash/debounce'
 
 import "./App.css";
 
 const URL = "https://www.songsterr.com/a/ra/songs.json?pattern=";
 
 class App extends React.Component {
-    constructor() {
-        super();
-        this.state = {
-            song: "",
-            songsList: []
-        };
-
-        this.onChange = this.onChange.bind(this);
-        this.fetchSongs = this.fetchSongs.bind(this);
-    }
-
-
-    fetchSongs = (url) => {
-        fetch(url)
-            .then(function(response) {
-                return response.json();
-            })
-            .then((myJson) => {
-                const data = JSON.stringify(myJson);
-                let songsList = JSON.parse(data);
-                let ul = document.getElementById('#list')
-
-                songsList.forEach(song => {
-                   let listItem = this.renderSong(song);
-                   ul.innerHTML += listItem;
-                });
-            });
+    state = {
+        search: "",
+        songsList: []
     };
 
-    renderSong = song => {
-        console.log(`name: ${song.title}, artist: ${song.artist.name}`)
-
-        let li = `name: ${song.title}, artist: ${song.artist.name}`;
-
-        return <li>{li}</li>
-    };
-
-    onChange = event => {
-        this.setState({
-            [event.target.name]: event.target.value
-        });
-        if (this.state.song.length >= 3) {
-            this.fetchSongs(`${URL} + ${this.state.song}`)
+    renderSong = ({ id, title, artist }) => {
+        if (id && title && artist) {
+            return <li key={id}>{`title: ${title}`}<br />{`artist: ${artist}`}</li>
         }
     };
 
+    onChange = async (text) => {
+        const stream = await fetch(`${URL}${text}`);
+        const data = await stream.json();
+        this.setState({ songsList: data.map(({ id, title, artist: { name: artist } }) => ({ id, title, artist }))})
+    };
+
+    handleChange = debounce(this.onChange, 500);
+
     render() {
+        console.count();
+
         return (
             <div className="App">
                 <h1>Songs</h1>
-                <p>Name: {this.state.song}</p>
-                <input type="text" name={"song"} value={this.state.song} onChange={this.onChange} />
-                <ul id={'#list'}>
-                    {/*<li>{this.state.songsList}</li>*/}
-                </ul>
+                <p>Name: {this.state.search}</p>
+                <input type="text" name={"search"} onChange={e => this.handleChange(e.target.value)} />
+                <ol id={'#list'}>
+                    {this.state.songsList.map(this.renderSong)}
+                </ol>
             </div>
         );
     }
